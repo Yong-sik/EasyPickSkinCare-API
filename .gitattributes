@@ -1,0 +1,5 @@
+/mvnw text eol=lf
+*.cmd text eol=crlf
+
+# 모든 파일에 대해 줄 바꿈을 LF로 유지
+* text=auto
