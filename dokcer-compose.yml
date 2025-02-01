@@ -3,20 +3,18 @@ version: "3.8"
 services:
   app:
     image: openjdk:17-jdk-slim
-    container_name: java_app
-    environment:
-      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
-      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
-      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+    container_name: java_api
     ports:
-      - "${APP_PORT}:${APP_PORT}"
+      - "${API_HOST_PORT}:${API_CONTAINER_PORT}"
     volumes:
-      - ./app:/app # 애플리케이션 실행 파일 경로 (실행파일 위치 지정하기 편하게 명시)
-      - app_logs:/app/logs # Java 로그 파일 경로
+      - /app:/app	# 애플리케이션 실행 파일 경로 (실행파일 위치 지정하기 편하게 명시)
+      - app_logs:/app/logs	# Java 로그 파일 경로
     working_dir: /app
     command: ["java", "-jar", "app.jar"]
     depends_on:
       - db
+    networks:
+      - app_network
 
   db:
     image: postgres:13
@@ -25,14 +23,28 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-      TZ: Asia/Seoul # 한국 시간대 설정
+      TZ: Asia/Seoul
+      POSTGRES_INITDB_OPTIONS: "--username=${POSTGRES_USER} --password=${POSTGRES_PASSWORD} --locale=ko_KR.UTF-8" # 제품 검색 시 한글 정렬 기준을 적용하기 위함
     ports:
-      - "${DB_PORT}:${DB_PORT}"
+      - "${DB_HOST_PORT}:${DB_CONTAINER_PORT}"
     volumes:
-      - pg_data:/var/lib/postgresql/data # 데이터베이스 데이터를 위한 볼륨
-      - db_logs:/var/log/postgresql # DB 로그 파일을 위한 볼륨 마운트
+      - ./init.sh:/usr/local/bin/init.sh # 데이터베이스 초기화 스크립트 경로
+      - pg_data:/var/lib/postgresql/data # 데이터베이스 데이터 경로
+      - db_logs:/var/log/postgresql # DB 로그 파일 경로
+    command: # 초기화 스크립트 실행
+      [
+        "bash",
+        "-c",
+        "chmod +x /usr/local/bin/init.sh && /usr/local/bin/init.sh",
+      ]
+    networks:
+      - app_network
 
 volumes:
   pg_data:
   db_logs:
   app_logs:
+
+networks:
+  app_network:
+    driver: bridge
