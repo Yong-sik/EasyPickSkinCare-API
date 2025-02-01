@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.easypickSkinCareApi.dto.ApiResponse;
 import com.example.easypickSkinCareApi.dto.ProductsDto;
 import com.example.easypickSkinCareApi.dto.UserFavoritesRequestDto;
 import com.example.easypickSkinCareApi.service.UserFavoritesService;
@@ -41,5 +43,13 @@ public class UserFavoriteController {
     	else {
     		return ResponseEntity.status(400).body("즐겨찾기 등록 실패");
     	}
+    }
+    
+    @DeleteMapping
+    public ResponseEntity<ApiResponse<UserFavoritesRequestDto>> deleteUserFavorites(@RequestBody UserFavoritesRequestDto userFavoritesRequestDto) {
+        // favoriteRequestDTO는 요청 본문에 담긴 userId와 productId를 가진 객체입니다.
+    	ApiResponse<UserFavoritesRequestDto> response = userFavoritesService.deleteUserFavorites(userFavoritesRequestDto);
+		return ResponseEntity.status(response.getStatusCode()).body(response);
+    	
     }
 }

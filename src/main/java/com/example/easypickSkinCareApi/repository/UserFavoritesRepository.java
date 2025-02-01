@@ -17,7 +17,8 @@ public interface UserFavoritesRepository extends JpaRepository<UserFavorites, Us
 	           "FROM UserFavorites uf " +
 	           "JOIN uf.products p " +
 	           "WHERE uf.userId = :userId")
-    List<ProductsDto> findByUserId(@Param("userId") String userId);
+    List<ProductsDto> findUserFavoriteProductsfindByUserId(@Param("userId") String userId);
+	
     // 유저가 선택한 제품이 이미 즐겨찾기에 등록된 상태인지 확인
     boolean existsByUserIdAndProductId(String userId, int productId);
 }

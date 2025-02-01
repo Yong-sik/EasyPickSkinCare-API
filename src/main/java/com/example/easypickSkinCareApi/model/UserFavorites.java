@@ -26,12 +26,12 @@ public class UserFavorites {
     @Column(name = "product_id")
     private Integer productId;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = true)
-    @JoinColumn(name = "product_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id", insertable = false, updatable = false)
 	private Products products;
 	
-    @ManyToOne(fetch = FetchType.LAZY, optional = true)
-	@JoinColumn(name = "user_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "user_id", insertable = false, updatable = false)
 	private Users users;
 
     @Column(nullable = false)

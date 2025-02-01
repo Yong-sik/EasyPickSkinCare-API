@@ -26,7 +26,10 @@ public class Users {
     @Column(name = "createdDate", nullable = false, updatable = false)
     private Timestamp createdDate;
 
-    // 생성자 (필요한 필드만)
+    public Users() {
+	}
+
+	// 생성자 (필요한 필드만)
     public Users(String userId, boolean isActive, String userPassword, Timestamp deactivationDate, Timestamp createdDate) {
         this.userId = userId;
         this.isActive = isActive;
