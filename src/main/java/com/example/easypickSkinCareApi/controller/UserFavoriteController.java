@@ -2,7 +2,6 @@ package com.example.easypickSkinCareApi.controller;
 
 import java.util.List;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,20 +28,16 @@ public class UserFavoriteController {
 
     // 즐겨찾기 목록 조회 API
     @GetMapping("/{userId}")
-    public List<ProductsDto> getUserFavoriteProducts(@PathVariable("userId") String userId) {
-        return userFavoritesService.getUserFavoriteProducts(userId);
+    public ResponseEntity<ApiResponse<List<ProductsDto>>> getUserFavoriteProducts(@PathVariable("userId") String userId) {
+    	ApiResponse<List<ProductsDto>> response = userFavoritesService.getUserFavoriteProducts(userId);
+		return ResponseEntity.status(response.getStatusCode()).body(response);
     }
     
     @PostMapping
-    public ResponseEntity<String> addUserFavorites(@RequestBody UserFavoritesRequestDto userFavoritesRequestDto) {
-        // favoriteRequestDTO는 요청 본문에 담긴 userId와 productId를 가진 객체입니다.
-    	boolean isAdded = userFavoritesService.addUserFavorites(userFavoritesRequestDto);
-    	if (isAdded) {
-    		return ResponseEntity.ok("즐겨찾기 등록 성공");
-    	}
-    	else {
-    		return ResponseEntity.status(400).body("즐겨찾기 등록 실패");
-    	}
+    public ResponseEntity<ApiResponse<UserFavoritesRequestDto>> addUserFavorites(@RequestBody UserFavoritesRequestDto userFavoritesRequestDto) {
+    	// favoriteRequestDTO는 요청 본문에 담긴 userId와 productId를 가진 객체입니다.
+    	ApiResponse<UserFavoritesRequestDto> response = userFavoritesService.addUserFavorites(userFavoritesRequestDto);
+		return ResponseEntity.status(response.getStatusCode()).body(response);
     }
     
     @DeleteMapping
@@ -50,6 +45,5 @@ public class UserFavoriteController {
         // favoriteRequestDTO는 요청 본문에 담긴 userId와 productId를 가진 객체입니다.
     	ApiResponse<UserFavoritesRequestDto> response = userFavoritesService.deleteUserFavorites(userFavoritesRequestDto);
 		return ResponseEntity.status(response.getStatusCode()).body(response);
-    	
     }
 }

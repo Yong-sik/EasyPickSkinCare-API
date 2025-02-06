@@ -25,7 +25,6 @@ public class UserFavoritesService {
     private UserFavoritesRepository userFavoritesRepository;
     private UsersRepository usersRepository;
     private ProductsRepository productsRepository;
-    private static final Logger logger = LoggerFactory.getLogger(UserFavoritesService.class);
     
     UserFavoritesService(UserFavoritesRepository userFavoritesRepository, 
     		UsersRepository usersRepository, 
@@ -36,37 +35,47 @@ public class UserFavoritesService {
     }
 
     // 사용자 즐겨찾기 목록에 있는 모든 상품을 조회
-    
-    public List<ProductsDto> getUserFavoriteProducts(@Param("userId") String userId) {
+    public ApiResponse<List<ProductsDto>> getUserFavoriteProducts(@Param("userId") String userId) {
+    	
+    	boolean isUserExists = usersRepository.existsById(userId);
+    	
+    	// users 테이블에 요청을 보낸 유저가 존재하는지 확인 -> 존재하지 않으면 실패 처리
+        if (!isUserExists) {
+            return new ApiResponse<>(400, "유효하지 않은 사용자입니다. 재로그인 후 시도해주세요.");
+        }
+        
         List<ProductsDto> favoriteProducts = userFavoritesRepository.findUserFavoriteProductsfindByUserId(userId);
-        return favoriteProducts;
+        
+        return new ApiResponse<>(200, "즐겨찾기 목록 조회 성공", favoriteProducts);
     }
     
     // 제품을 즐겨찾기 목록에 추가
-    public boolean addUserFavorites(UserFavoritesRequestDto userFavoritesRequestDto) {
+    public ApiResponse<UserFavoritesRequestDto> addUserFavorites(UserFavoritesRequestDto userFavoritesRequestDto) {
     	String userId = userFavoritesRequestDto.getUserId();
         Integer productId = userFavoritesRequestDto.getProductId();
     	
     	boolean isUserExists = usersRepository.existsById(userId);
     	boolean isProductExists = productsRepository.existsById(productId);
 
-        if (!isUserExists || !isProductExists) {
-        	logger.warn("Failed to add userFavorites: userIdExists={}, productIdExists={}", 
-                    isUserExists, isProductExists);
-            return false;
+    	// users 테이블에 요청을 보낸 유저가 존재하는지 확인 -> 존재하지 않으면 실패 처리
+        if (!isUserExists) {
+            return new ApiResponse<>(400, "유효하지 않은 사용자입니다. 재로그인 후 시도해주세요.");
         }
         
-        // 이미 즐겨찾기 목록에 추가된 제품인지 확인
+        // products 테이블에 유저가 요청한 제품이 존재하는지 확인 -> 존재하지 않으면 실패 처리
+        if (!isProductExists) {
+            return new ApiResponse<>(400, "해당 제품은 유효하지 않은 제품입니다. 새로고침 후 시도해주세요.");
+        }
+        
+        // 이미 즐겨찾기 목록에 추가된 제품인지 확인 -> 이미 존재하는 제품이면 실패 처리
         boolean isAlreadyFavorited = userFavoritesRepository.existsByUserIdAndProductId(userId, productId);
         if (isAlreadyFavorited) {
-        	logger.warn("Failed to add userFavorites: isAlreadyFavorited={}", 
-                    isAlreadyFavorited);
-            return false;
+        	return new ApiResponse<>(400, "해당 제품은 이미 즐겨찾기에 등록된 상품입니다. 새로고침 후 시도해주세요.");
         }
         
         userFavoritesRepository.save(userFavoritesRequestDto.toEntity());
         
-        return true;
+        return new ApiResponse<>(200, "즐겨찾기 등록에 성공했습니다.", userFavoritesRequestDto);
     }
     
     // 해당 제품을 즐겨찾기 목록에서 삭제
@@ -77,23 +86,24 @@ public class UserFavoritesService {
     	boolean isUserExists = usersRepository.existsById(userId);
     	boolean isProductExists = productsRepository.existsById(productId);
 
-    	// users 테이블, products 테이블에 존재하는지 확인 -> 존재하지 않으면 실패 처리
-        if (!isUserExists || !isProductExists) {
-        	logger.warn("Failed to add userFavorites: userIdExists={}, productIdExists={}", 
-                    isUserExists, isProductExists);
-            return new ApiResponse<>(400, "해당 사용자 또는 해당 제품이 유효하지 않습니다.");
+    	// users 테이블에 요청을 보낸 유저가 존재하는지 확인 -> 존재하지 않으면 실패 처리
+        if (!isUserExists) {
+            return new ApiResponse<>(400, "유효하지 않은 사용자입니다. 재로그인 후 시도해주세요.");
+        }
+        
+        // products 테이블에 유저가 요청한 제품이 존재하는지 확인 -> 존재하지 않으면 실패 처리
+        if (!isProductExists) {
+            return new ApiResponse<>(400, "해당 제품은 유효하지 않은 제품입니다. 새로고침 후 시도해주세요.");
         }
         
         // 이미 즐겨찾기 목록에 추가된 제품인지 확인 -> 즐겨찾기 목록에 없는 제품이면 실패 처리 
         boolean isAlreadyFavorited = userFavoritesRepository.existsByUserIdAndProductId(userId, productId);
         if (!isAlreadyFavorited) {
-        	logger.warn("Failed to add userFavorites: isAlreadyFavorited={}", 
-                    isAlreadyFavorited);
-            return new ApiResponse<>(400, "해당 제품은 즐겨찾기 목록에 존재하지 않습니다.");
+            return new ApiResponse<>(400, "해당 제품은 즐겨찾기 목록에 존재하지 않습니다. 새로고침 후 시도해주세요.");
         }
         
-        userFavoritesRepository.deleteById( new UserFavoritesId( userFavoritesRequestDto.getUserId(), userFavoritesRequestDto.getProductId()) );
+        userFavoritesRepository.deleteById( new UserFavoritesId( userId, productId ) );
         
-        return new ApiResponse<>(200, "즐겨찾기 해제 성공", userFavoritesRequestDto);
+        return new ApiResponse<>(200, "즐겨찾기 등록 해제에 성공했습니다.", userFavoritesRequestDto);
     }
 }

@@ -13,7 +13,7 @@ import com.example.easypickSkinCareApi.model.UserFavoritesId;
 public interface UserFavoritesRepository extends JpaRepository<UserFavorites, UserFavoritesId>{
 	
 	// 사용자 즐겨찾기 목록에 있는 모든 상품을 조회
-	@Query("SELECT new com.example.easypickSkinCareApi.dto.ProductsDto(p.productName, p.brand) " +
+	@Query("SELECT new com.example.easypickSkinCareApi.dto.ProductsDto(p.productId, p.productName, p.brand) " +
 	           "FROM UserFavorites uf " +
 	           "JOIN uf.products p " +
 	           "WHERE uf.userId = :userId")
